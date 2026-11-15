@@ -1,6 +1,6 @@
 # AlgoBackTune
 
-**AI Strategy Backtester** for MetaTrader 5 Expert Advisors — backtest and
+**AI Strategy External Backtester** for MetaTrader 5 Expert Advisors — backtest and
 optimize *any* EA from its `.mq5` source, without opening MT5 and the terminal.
 
 The EA source file can be translated to a Python strategy module by the
