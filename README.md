@@ -1,10 +1,10 @@
 # AlgoBackTune
 
-**AI Strategy External Backtester** for MetaTrader 5 Expert Advisors — backtest and
-optimize *any* EA from its `.mq5` source, without opening MT5 and the terminal.
+**External EA Strategy Backtester** for MetaTrader 5 Expert Advisors Developers — backtest and
+optimize *any* EA from its `.mq5` source, before compile and outside of MT5 and the terminal.
 
-The EA source file can be translated to a Python strategy module by the
-**MetaEditor AI Assistant** (or any LLM/AI tool you prefer — this app never calls
+To simplify the process, the `.mq5` source can be translated to a Python strategy module 
+by **MetaEditor AI Assistant** (or any LLM/AI tool you prefer — this app never calls
 one itself). The translated module is pasted back into the app, and APPLY AS STRATEGY, 
 then executed by the app's Numba-based tick-level backtest engine.
 
@@ -19,7 +19,7 @@ then executed by the app's Numba-based tick-level backtest engine.
     - syntax-checked (`compile`),
     - required to define `simulate_range(...)` and `EXIT_LABEL`,
     - smoke-tested in-process on synthetic ticks (a couple of minutes max),
-    - written to `%APPDATA%\AlgoBackTune\strategy_cache\strategy_<hash>.py`
+    - written to `%APPDATA%\AlgoBackTune\strategy_cache\strategy_<name>_<hash>.py`
       and auto-loaded for this EA.
 3. **Backtest & optimize** as usual: the translated strategy runs on the same
    tick-level engine as the built-in default.
@@ -40,13 +40,8 @@ The app ships **no built-in default strategy**: a strategy module is
 **required** before any backtest or optimization can run. The engine
 raises a clear error if you try to run without one.
 
-`ticklab_algo/strategy.py` is kept only as a **reference / test fixture**
-for the strategy contract (a small EMA-fast / SMA-slow cross with
-net-profit target / max-drawdown close-all). It is **not** matched to any
-real EA and is not used as a fallback at runtime. To use it as a starting
-point, paste its contents into the STRATEGY tab and click
-**APPLY AS STRATEGY** — but always compare against your real EA's results
-in the MT5 tester.
+To use it paste the translated module on the STRATEGY tab 
+and click **APPLY AS STRATEGY**.
 
 ## Running
 
@@ -54,12 +49,17 @@ in the MT5 tester.
 run.bat
 ```
 
-(or `py -3 -m ticklab_algo`, or `run_wo_console.vbs` without a console window)
+(or `py -3 -m ticklab_algo`, or `run_tanpa_konsol.vbs` without a console window)
 
-Requires: Python 3.10+, `numpy`, `numba`. MT5 terminal does **not** need to
-be turn on — but the MT5 **tick cache** on this machine is required
-(`%APPDATA%\MetaQuotes\Terminal` and `Tester`), i.e. the symbol/period must
-have been backtested or downloaded at least once in MT5.
+Requires: Python 3.10+, `numpy`, `numba` (see `requirements.txt`).
+Optional: `MetaTrader5` (Python) for live MT5 integration (symbol list,
+account data, specs, live ticks) — `pip install MetaTrader5`. The app works
+without it (uses the local MT5 tick cache only).
+MT5 terminal does **not** need to be open for cache-based backtests — but the
+MT5 **tick cache** on this machine is required (`%APPDATA%\MetaQuotes\Terminal`
+and `Tester`), i.e. the symbol/period must have been backtested or
+downloaded at least once in MT5. For **MT5 Live** the terminal must be
+**open and logged in**.
 
 ## Features
 
@@ -74,9 +74,36 @@ have been backtested or downloaded at least once in MT5.
 - **EA SETTINGS tab**: parameters is auto load from strategy module, 
   one editable row per `.mq5` input (From/Step/To + OPT checkbox + int-aware counts).
 - **SUMMARY / CHART / TRADES / OPTIMIZATION RESULTS / LOG** tabs.
-- Real ticks only (100% ticks, via the local MT5 cache, no MT5 GUI).
-- Streaming optimization with Stop button; Full grid and Quick (random +
-  local) algorithms.
+- **Real ticks only** (100% ticks, via the local MT5 cache, no MT5 GUI needed).
+- **MT5 Live integration** (optional): when the MetaTrader 5 terminal is
+  installed and logged in, AlgoBackTune connects automatically on startup
+  and can use the terminal as a live data source:
+    - **Auto-load symbol list**: every symbol available in the terminal's
+      Market Watch is merged into the Symbol dropdown (built-in 56 + MT5
+      extras, de-duplicated).
+    - **Auto-load account data**: balance and leverage are read from the
+      logged-in account and fill the *Initial Balance* / *Leverage* fields.
+    - **Auto-load symbol specs**: point, pip, contract size, digits,
+      currency and description are read from `symbol_info` and auto-fill the
+      ACCOUNT panel (point, pip, contract, etc.) when a symbol is selected.
+    - **Auto-load ticks**: the **MT5 Live** button fetches real ticks for the
+      selected symbol and From..To range directly from the terminal
+      (`copy_ticks_range` / `copy_ticks_from`) and uses them as the backtest
+      source (no `.tkc` cache needed). The fetched ticks are cached in
+      memory for the session.
+    - **Terminal info**: terminal name, build and connection status are
+      logged on connect; an **MT5: connected / not connected** indicator is
+      shown in the status bar.
+    - **Timeframe list**: the full M1..MN1 timeframe set is supported; the
+      terminal's available periods map to the same M1/M5/M15/M30/H1/H4/D1/
+      W1/MN1 values used by the engine.
+    - **Market book / rates / orders / positions / history**: the wrapper
+      (`ticklab_algo/mt5_source.py`) also exposes market-book, copy_rates_*,
+      order_calc_margin/profit, positions, orders and history deals/orders
+      for advanced use.
+  The terminal must be **open and logged in** for MT5 Live; tick history
+  must be available locally (downloaded) or the terminal downloads it
+  (which can be slow for large ranges).
 - Exports: CSV / XML / HTML report (trades table + metrics).
 - **Cache**: each distinct `.mq5` source hashes to its own
   `strategy_<hash>.py` in `%APPDATA%\AlgoBackTune\strategy_cache\`
@@ -159,16 +186,12 @@ conclusions carried over to the built-in default strategy:
 
 - Initial balance defaults to **100** (top-bar field); applied to both
   backtests and optimizations.
-- Terminal MT5 must be closed before backtesting (single instance), though
-  this app itself never opens MT5.
-- The `.set` file is deliberately left empty: FROM/STEP/TO follow the `.mq5`
-  defaults and OPT checkboxes are inactive. Fill in values manually to
-  optimize.
 - The initial symbol preset is **EURUSD** (5 digits, 1 lot = 100 000 units);
-  the preset list in the ACCOUNT group covers the common symbols.
+  the preset list in the ACCOUNT group covers the common symbols. 
 - Optimization methods: **Full** (grid search; > 20 000 combos warns; default on startup) and
   **Quick** (random sampling + local search, deduplicated).
 - The app ships **no built-in default strategy** — loading a different
   `.mq5` and running without generating a strategy will fail with a clear
   "No strategy module provided" error. Generate / apply a strategy first.
-# AgloBackTune
+  
+#  TickLab - AgloBackTune
