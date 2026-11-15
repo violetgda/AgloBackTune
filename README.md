@@ -49,7 +49,7 @@ and click **APPLY AS STRATEGY**.
 run.bat
 ```
 
-(or `py -3 -m ticklab_algo`, or `run_tanpa_konsol.vbs` without a console window)
+(or `py -3 -m ticklab_algo`, or `run_wo_console.vbs` without a console window)
 
 Requires: Python 3.10+, `numpy`, `numba` (see `requirements.txt`).
 Optional: `MetaTrader5` (Python) for live MT5 integration (symbol list,
