@@ -54,7 +54,7 @@ in the MT5 tester.
 run.bat
 ```
 
-(or `py -3 -m ticklab_algo`, or `run_tanpa_konsol.vbs` without a console window)
+(or `py -3 -m ticklab_algo`, or `run_wo_console.vbs` without a console window)
 
 Requires: Python 3.10+, `numpy`, `numba`. MT5 terminal does **not** need to
 be turn on — but the MT5 **tick cache** on this machine is required
@@ -98,7 +98,7 @@ AlgoBackTune/
 │   ├── bars.py         # tick aggregation, EMA/SMA
 │   └── tickcache.py    # MT5 tick-cache reader (.tkc)
 ├── tests/test_smoke.py
-└── run.bat / run_tanpa_konsol.vbs
+└── run.bat / run_wo_console.vbs
 ```
 
 ## The strategy contract (what the AI assistant is asked to produce)
