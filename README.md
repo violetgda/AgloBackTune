@@ -48,10 +48,6 @@ point, paste its contents into the STRATEGY tab and click
 **APPLY AS STRATEGY** — but always compare against your real EA's results
 in the MT5 tester.
 
-**No `.mq5` ships with the app anymore.** At startup no EA is loaded; use
-**EA SETTINGS → Load .mq5 EA...** to load your own expert advisor, then paste
-the translated module on the STRATEGY tab and click **APPLY AS STRATEGY**.
-
 ## Running
 
 ```bat
